@@ -17,15 +17,39 @@ set(FRAME_FILES
     main.cpp
     dbuscontrolcenterservice.cpp)
 
+set(INTERFACES_FILES
+    interfaces/frameproxyinterface.h
+    interfaces/moduleinterface.h
+)
+
 set(WINDOW_FILES
+
+    window/mainwindow.h
     window/mainwindow.cpp
     window/insertplugin.h
     window/insertplugin.cpp
 )
 
+# sync
+set(SYNC_FILES
+    window/modules/sync/syncmodule.cpp
+    window/modules/sync/syncwidget.cpp
+
+    )
+
+# accounts 账户
+set(ACCOUNTS_FILES
+    window/modules/accounts/accountsmodule.cpp
+    window/modules/accounts/accountswidget.cpp
+    window/modules/accounts/accountsworker.cpp
+    )
+
 set(SRCS
     ${FRAME_FILES}
+    ${INTERFACES_FILES}
     ${WINDOW_FILES}
+    ${ACCOUNTS_FILES}
+    ${SYNC_FILES}
 )
 
 # Find library

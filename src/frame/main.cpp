@@ -14,7 +14,7 @@
 DWIDGET_USE_NAMESPACE
 DCORE_USE_NAMESPACE
 
-static MainWindow *gwm{nullptr};
+static DCC_NAMESPACE::MainWindow *gwm{nullptr};
 
 int main(int argc, char *argv[])
 {
@@ -39,8 +39,7 @@ int main(int argc, char *argv[])
     //TODO:GSetting
     QRect mwRect(0, 0, 820, 634);
 
-    // TODO??DCC_NAMESPACE::
-    MainWindow mw;
+    DCC_NAMESPACE::MainWindow mw;
     QDBusConnection con = QDBusConnection::sessionBus();
     mw.show();
     mw.initAllmodule();

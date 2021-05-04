@@ -20,10 +20,97 @@ set(FRAME_FILES
 set(INTERFACES_FILES
     interfaces/frameproxyinterface.h
     interfaces/moduleinterface.h
+#    include/namespace.h
+)
+
+# 加载 widgets
+set(WIDGETS_FILES
+                widgets/backbutton.cpp
+                widgets/basiclistdelegate.cpp
+                ../..
+                ../../include/widgets/basiclistdelegate.h
+                widgets/buttontuple.cpp
+                widgets/dccslider.cpp
+                ../../include/widgets/dccslider.h
+                widgets/dccsliderannotated.cpp
+                ../../include/widgets/dccsliderannotated.h
+                ../../include/widgets/labels/largelabel.h
+                ../../include/widgets/labels/normallabel.h
+                ../../include/widgets/labels/smalllabel.h
+                ../../include/widgets/labels/tipslabel.h
+                widgets/lineeditwidget.cpp
+                widgets/loadingindicator.cpp
+                ../../include/widgets/loadingindicator.h
+                widgets/loadingnextpagewidget.cpp
+                widgets/nextbutton.cpp
+                widgets/optionlistpage.cpp
+                widgets/searchinput.cpp
+                ../../include/widgets/searchinput.h
+                widgets/separator.cpp
+                ../../include/widgets/separator.h
+                widgets/settingsheaderitem.cpp
+                ../../include/widgets/settingsheaderitem.h
+                widgets/settingsitem.cpp
+                ../../include/widgets/settingsitem.h
+                widgets/spinboxwidget.cpp
+                ../../include/widgets/spinboxwidget.h
+                widgets/buttoneditwidget.cpp
+                ../../include/widgets/buttoneditwidget.h
+                widgets/tipsitem.cpp
+                ../../include/widgets/tipsitem.h
+                widgets/titlelabel.cpp
+                ../../include/widgets/titlelabel.h
+                widgets/titlevalueitem.cpp
+                ../../include/widgets/titlevalueitem.h
+                widgets/translucentframe.cpp
+                ../../include/widgets/translucentframe.h
+                widgets/settingsgroup.cpp
+#                widgets/switchwidget.cpp
+                widgets/comboxwidget.cpp
+                ../../include/widgets/comboxwidget.h
+                widgets/themeitempic.cpp
+                ../../include/widgets/themeitempic.h
+                ../../include/widgets/utils.h
+                ../../include/widgets/backbutton.h
+                widgets/basiclistmodel.cpp
+                ../../include/widgets/basiclistmodel.h
+                widgets/basiclistview.cpp
+                ../../include/widgets/basiclistview.h
+                ../../include/widgets/buttontuple.h
+                widgets/comboboxwidget.cpp
+                ../../include/widgets/comboboxwidget.h
+                widgets/contentwidget.cpp
+                ../../include/widgets/contentwidget.h
+                widgets/editablenextpagewidget.cpp
+                ../../include/widgets/editablenextpagewidget.h
+                widgets/filechoosewidget.cpp
+                ../../include/widgets/filechoosewidget.h
+                ../../include/widgets/lineeditwidget.h
+                ../../include/widgets/loadingnextpagewidget.h
+                ../../include/widgets/nextbutton.h
+                widgets/nextpagewidget.cpp
+                ../../include/widgets/nextpagewidget.h
+                widgets/optionitem.cpp
+                ../../include/widgets/optionitem.h
+                ../../include/widgets/optionlistpage.h
+                ../../include/widgets/settingsgroup.h
+                widgets/settingshead.cpp
+                ../../include/widgets/settingshead.h
+#                ../../include/widgets/switchwidget.h
+                widgets/themeitem.cpp
+                ../../include/widgets/themeitem.h
+                widgets/titledslideritem.cpp
+                ../../include/widgets/titledslideritem.h
+                widgets/timeoutdialog.cpp
+                ../../include/widgets/timeoutdialog.h
+                widgets/multiselectlistview.cpp
+                 ../../include/widgets/multiselectlistview.h
+                widgets/powerdisplaywidget.cpp
+                ../../include/widgets/powerdisplaywidget.h
+                widgets/widgets.qrc
 )
 
 set(WINDOW_FILES
-
     window/mainwindow.h
     window/mainwindow.cpp
     window/insertplugin.h
@@ -39,6 +126,8 @@ set(SYNC_FILES
 
 # accounts 账户
 set(ACCOUNTS_FILES
+    modules/accounts/user.cpp
+    modules/accounts/usermodel.cpp
     window/modules/accounts/accountsmodule.cpp
     window/modules/accounts/accountswidget.cpp
     window/modules/accounts/accountsworker.cpp
@@ -58,11 +147,24 @@ find_package(DtkWidget REQUIRED)
 find_package(DtkCMake REQUIRED)
 find_package(Qt5 COMPONENTS Core Widgets Multimedia DBus Network Svg REQUIRED)
 
-# 添加连接库
-#add_library(dccwidgets SHARED
-#    ${WIDGETS_FILES}
-#)
+#  pkg-config 是否存在指定的 .pc 文件
+pkg_check_modules(QGSettings REQUIRED gsettings-qt)
 
+set(INCLUDES)
+
+# 添加连接库
+add_library(dccwidgets SHARED
+    ${WIDGETS_FILES}
+)
+target_include_directories(dccwidgets PUBLIC
+    ${CMAKE_SOURCE_DIR}/include
+    ${DtkWidget_INCLUDE_DIRS}
+    ${Qt5Gui_PRIVATE_INCLUDE_DIRS}
+)
+target_link_libraries(dccwidgets PRIVATE
+    ${DtkWidget_LIBRARIES}
+    ${Qt5Widgets_LIBRARIES}
+)
 # 导入目标头文件
 #target_include_directories(dccwidgets PUBLIC
 #    ${CMAKE_SOURCE_DIR}/include
@@ -79,6 +181,7 @@ find_package(Qt5 COMPONENTS Core Widgets Multimedia DBus Network Svg REQUIRED)
 
 # 添加可执行文件
 add_executable(${BIN_NAME} ${SRCS})
+
 # 导入目标目录
 target_include_directories(${BIN_NAME} PUBLIC
     ${CMAKE_SOURCE_DIR}/include
@@ -98,7 +201,7 @@ target_include_directories(${BIN_NAME} PUBLIC
 
 # 将目标文件与库文件进行链接
 target_link_libraries(${BIN_NAME} PRIVATE
-    #dccwidgets
+    dccwidgets
     ${XCB_EWMH_LIBRARIES}
     ${DFrameworkDBus_LIBRARIES}
     ${DtkWidget_LIBRARIES}

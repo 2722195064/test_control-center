@@ -1,7 +1,16 @@
 #include "mainwindow.h"
+#include "interfaces/frameproxyinterface.h"
+#include "modules/accounts/accountsmodule.h"
 
 #include <QHBoxLayout>
 #include <DTitlebar>
+#include <QVariant>
+
+using namespace DCC_NAMESPACE;
+DTK_USE_NAMESPACE
+
+//const QMargins navItemMargin(5, 3, 5, 3);
+//const QVariant NavItemMargin = QVariant::fromValue(navItemMargin);
 
 MainWindow::MainWindow(QWidget *parent)
     : DMainWindow (parent)
@@ -87,21 +96,142 @@ MainWindow::~MainWindow()
 
 void MainWindow::pushWidget(ModuleInterface * const inter, QWidget * const w)
 {
+    if (!inter)  {
+        qDebug() << Q_FUNC_INFO << " inter is nullptr";
+        return;
+    }
 
+    if (!w)  {
+        qDebug() << Q_FUNC_INFO << " widget is nullptr";
+        return;
+    }
 }
 
 void MainWindow::popWidget(ModuleInterface * const inter)
 {
 
 }
+
 // 入口
 void MainWindow::initAllmodule(const QString &m)
 {
+    // 避免重复加载
+    if(m_existenceInit)
+        return;
+    m_existenceInit = true;
+
+    using namespace accounts;
+    // 实例化显示module
+    m_modules = {
+        {new AccountsModule(this), "帐户"},
+
+    };
+//     TODO:通过Gsetting 设置module是否可见
+
+//  cbegin   Container<T>::const_iterator
+    for (auto it = m_modules.cbegin(); it != m_modules.cend(); ++it){
+        DStandardItem *item = new DStandardItem;
+        item->setIcon(it->first->icon());
+        item->setText(it->second);
+        item->setAccessibleText(it->second);
+//        item->setData(NavItemMargin, Dtk::MarginsRole);
+
+        m_navModel->appendRow(item);
+    }
+
+    // 设置模块大小
+    bool isIcon = m_contentStack.empty();
+    resetNavList(isIcon);
+
+    // 模块初始化
+    modulePreInitialize(m);
+}
+
+// 第一次点击顶部视图
+void MainWindow::onFirstItemClick(const QModelIndex &index)
+{
+    ModuleInterface *inter = m_modules[index.row()].first;
+
+    m_navView->setFocus();
+    popAllWidgets();
+
+    if (!m_initList.contains(inter)){
+        inter->initialize();  // 开始初始化各模块
+        m_initList << inter;
+    }
+
+    setCurrModule(inter);
+    inter->active(); // 显示加载各二级菜单
+
+    m_navView->clearSelection();
+    m_navView->setSelectionMode(DListView::SingleSelection);
+    m_navView->setCurrentIndex(index);
+}
+
+void MainWindow::popAllWidgets(int place)
+{
+    for (int pageCount = m_contentStack.count(); pageCount > place ; pageCount--) {
+//        popWidget();
+    }
+}
+
+// 开启顶部视图 显示listview  此处显示控制中心两个视图模式
+void MainWindow::resetNavList(bool isIconMode)
+{
+    if (isIconMode && m_navView->viewMode() == QListView::IconMode)
+        return;
+
+    if (!isIconMode && m_navView->viewMode() == QListView::ListMode)
+        return;
+
+    if (isIconMode) {
+        // 显示顶部页面module
+        m_navView->setViewportMargins(QMargins(0, 0, 0, 0));
+        m_navView->setViewMode(QListView::IconMode);
+        m_navView->setDragEnabled(false);
+        m_navView->setMaximumWidth(QWIDGETSIZE_MAX);
+        m_navView->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
+        m_navView->setIconSize(QSize(84,84)); // 设置大小
+        m_navView->setItemSize(QSize(170,168));
+        m_navView->setItemSpacing(0);
+        m_navView->setSpacing(20);
+        m_navView->clearSelection();
+        m_navView->setSelectionMode(QAbstractItemView::NoSelection);
+
+        // 圆角弧度
+        DStyle::setFrameRadius(m_navView, 18);
+        m_rightView->hide();
+        m_backwardBtn->setEnabled(false);
+    } else {
+        m_navView->setViewportMargins(QMargins(10, 10, 10, 10));
+        m_navView->setViewMode(QListView::ListMode);
+        m_navView->setMinimumWidth(188);
+        m_navView->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Expanding);
+        m_navView->setIconSize(QSize(42,42));
+        m_navView->setItemSize(QSize(168,48));
+        m_navView->setSpacing(0);
+        m_navView->setSelectionMode(QAbstractItemView::SingleSelection);
+
+        DStyle::setFrameRadius(m_navView, 8);
+        // 选中当前的项
+        m_navView->selectionModel()->select(m_navView->currentIndex(), QItemSelectionModel::SelectCurrent);
+        m_rightView->show();
+        m_backwardBtn->setEnabled(true);
+        m_contentStack.top().second->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
+    }
+    m_navView->setAutoFillBackground(!isIconMode);
 
 }
 
-// 开启顶部视图 显示listview
-void MainWindow::onFirstItemClick(const QModelIndex &index)
+void MainWindow::modulePreInitialize(const QString &m)
 {
-
+    for (auto it = m_modules.cbegin(); it != m_modules.cend(); ++it) {
+        QElapsedTimer et;
+        et.start();
+        it->first->preInitialize(m == it->first->name());
+        qDebug() << QString("initialize %1 module using time: %2ms")
+                 .arg(it->first->name())
+                 .arg(et.elapsed());
+        // TODO: 设置模块是否可见 setModuleVisible
+    }
 }

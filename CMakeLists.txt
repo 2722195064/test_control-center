@@ -10,3 +10,6 @@ add_compile_definitions(CVERSION="${CVERSION}")
 add_subdirectory("src/frame")
 
 #find(GLOB HEADERS "include/*")
+
+set(INCLUDE_INSTALL_DIR include/dde-control-center)
+install(DIRECTORY ${HEADERS} DESTINATION ${INCLUDE_INSTALL_DIR})

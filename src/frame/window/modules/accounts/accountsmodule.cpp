@@ -1,5 +1,7 @@
+#include "accountsdetailwidget.h"
 #include "accountsmodule.h"
 #include "accountswidget.h"
+#include "createaccountpage.h"
 
 #include "modules/accounts/usermodel.h"
 #include "window/modules/accounts/accountsworker.h"
@@ -12,6 +14,7 @@ AccountsModule::AccountsModule(FrameProxyInterface *frame, QObject *parent)
     , ModuleInterface (frame)
 {
     m_frameProxy = frame;
+    m_pMainWindow = dynamic_cast<MainWindow *>(m_frameProxy);
 }
 
 void AccountsModule::initialize()
@@ -22,6 +25,8 @@ void AccountsModule::initialize()
     m_userModel = new UserModel(this);
     m_accountsWorker = new AccountsWorker(m_userModel);
 
+    m_accountsWorker->active();
+    connect(m_accountsWorker, &AccountsWorker::requestMainWindowEnabled, this, &AccountsModule::onSetMainWindowEnabled);
 
 }
 
@@ -35,9 +40,42 @@ void AccountsModule::active()
     m_accountsWidget = new AccountsWidget;
     m_accountsWidget->setVisible(false);
     m_accountsWidget->setModel(m_userModel);
+    connect(m_accountsWidget, &AccountsWidget::requestShowAccountsDetail, this, &AccountsModule::onShowAccountsDetailWidget);
+    connect(m_accountsWidget, &AccountsWidget::requestCreateAccount, this, &AccountsModule::onShowCreateAccountPage);
+
+    m_frameProxy->pushWidget(this, m_accountsWidget);
+    m_accountsWidget->setVisible(true);
+    // 显示默认用户
+    m_accountsWidget->showDefaultAccountInfo();
 }
 
 AccountsModule::~AccountsModule()
 {
 
+}
+
+void AccountsModule::onShowAccountsDetailWidget(dcc::accounts::User *account)
+{
+    AccountsDetailWidget *w = new AccountsDetailWidget(account);
+    w->setVisible(true);
+
+    m_frameProxy->pushWidget(this, w);
+}
+
+// 创建用户
+void AccountsModule::onShowCreateAccountPage()
+{
+    CreateAccountPage *w = new CreateAccountPage();
+    w->setVisible(true);
+    User *newUser = new User(this);
+    w->setModel(m_userModel, newUser);
+    connect(w, &CreateAccountPage::requestCreateUser, m_accountsWorker, &AccountsWorker::createAccount);
+    connect(m_accountsWorker, &AccountsWorker::requestBack, m_accountsWidget, &AccountsWidget::toRequestBack);
+    m_frameProxy->pushWidget(this, w);
+}
+
+void AccountsModule::onSetMainWindowEnabled(const bool isEnabled)
+{
+    if (m_pMainWindow)
+        m_pMainWindow->setEnabled(isEnabled);
 }

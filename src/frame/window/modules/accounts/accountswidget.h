@@ -54,8 +54,16 @@ public:
 
     QPixmap pixmapToRound(const QPixmap &src);
     void handleRequestBack(AccountsWidget::ActionOption option = AccountsWidget::ClickCancel);
+    void toRequestBack(bool toBack);
 
+public Q_SLOTS:
+    void addUser(dcc::accounts::User *user, bool t1 = true);
+    void removeUser(dcc::accounts::User *user);
+    void onItemClicked(const QModelIndex &index);
 
+Q_SIGNALS:
+    void requestShowAccountsDetail(dcc::accounts::User *account);
+    void requestCreateAccount();
 
 private:
     DTK_WIDGET_NAMESPACE::DFloatingButton *m_createBtn;

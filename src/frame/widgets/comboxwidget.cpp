@@ -23,6 +23,7 @@
 #include "widgets/labels/normallabel.h"
 #include "namespace.h"
 //#include "window/utils.h"
+#include "namespace.h"
 
 #include <QHBoxLayout>
 #include <QComboBox>
@@ -31,7 +32,7 @@
 #include <QMouseEvent>
 #include <QLabel>
 
-using namespace DCC_NAMESPACE;
+//using namespace DCC_NAMESPACE;
 namespace dcc {
 namespace widgets {
 
@@ -54,7 +55,7 @@ ComboxWidget::ComboxWidget(QWidget *widget, QFrame *parent)
     , m_str("")
 {
     // FIXME: 默认统一控件高度
-    setFixedHeight(ComboxWidgetHeight);
+    setFixedHeight(48);
     QHBoxLayout *mainLayout = new QHBoxLayout;
     m_titleLabel = qobject_cast<QLabel *>(m_leftWidget);
     if (m_titleLabel) {
@@ -67,7 +68,7 @@ ComboxWidget::ComboxWidget(QWidget *widget, QFrame *parent)
     mainLayout->setStretchFactor(m_switchComboBox,7);
     mainLayout->setContentsMargins(10, 0, 10, 0);
 
-    m_leftWidget->setFixedWidth(ComboxTitleWidth);
+    m_leftWidget->setFixedWidth(110);
     m_leftWidget->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
     setLayout(mainLayout);
 

@@ -65,7 +65,7 @@ set(WIDGETS_FILES
                 widgets/translucentframe.cpp
                 ../../include/widgets/translucentframe.h
                 widgets/settingsgroup.cpp
-#                widgets/switchwidget.cpp
+                widgets/switchwidget.cpp
                 widgets/comboxwidget.cpp
                 ../../include/widgets/comboxwidget.h
                 widgets/themeitempic.cpp
@@ -96,7 +96,7 @@ set(WIDGETS_FILES
                 ../../include/widgets/settingsgroup.h
                 widgets/settingshead.cpp
                 ../../include/widgets/settingshead.h
-#                ../../include/widgets/switchwidget.h
+                ../../include/widgets/switchwidget.h
                 widgets/themeitem.cpp
                 ../../include/widgets/themeitem.h
                 widgets/titledslideritem.cpp
@@ -115,22 +115,27 @@ set(WINDOW_FILES
     window/mainwindow.cpp
     window/insertplugin.h
     window/insertplugin.cpp
+    window/utils.h
 )
 
 # sync
 set(SYNC_FILES
     window/modules/sync/syncmodule.cpp
     window/modules/sync/syncwidget.cpp
-
     )
 
 # accounts 账户
 set(ACCOUNTS_FILES
     modules/accounts/user.cpp
     modules/accounts/usermodel.cpp
+    modules/accounts/avatarwidget.cpp
+    modules/accounts/avatardel.cpp
+    modules/accounts/creationresult.cpp
     window/modules/accounts/accountsmodule.cpp
     window/modules/accounts/accountswidget.cpp
     window/modules/accounts/accountsworker.cpp
+    window/modules/accounts/accountsdetailwidget.cpp
+    window/modules/accounts/createaccountpage.cpp
     )
 
 set(SRCS
@@ -144,11 +149,17 @@ set(SRCS
 # Find library
 find_package(PkgConfig REQUIRED)
 find_package(DtkWidget REQUIRED)
+find_package(DtkGui REQUIRED)
+find_package(PolkitQt5-1)  # 授权认证
 find_package(DtkCMake REQUIRED)
 find_package(Qt5 COMPONENTS Core Widgets Multimedia DBus Network Svg REQUIRED)
 
+set(DEEPIN_PW_CHECK libdeepin_pw_check.so)
+
 #  pkg-config 是否存在指定的 .pc 文件
 pkg_check_modules(QGSettings REQUIRED gsettings-qt)
+pkg_check_modules(DFrameworkDBus REQUIRED dframeworkdbus)
+
 
 set(INCLUDES)
 
@@ -156,32 +167,23 @@ set(INCLUDES)
 add_library(dccwidgets SHARED
     ${WIDGETS_FILES}
 )
+
+# 导入目标头文件
 target_include_directories(dccwidgets PUBLIC
     ${CMAKE_SOURCE_DIR}/include
     ${DtkWidget_INCLUDE_DIRS}
     ${Qt5Gui_PRIVATE_INCLUDE_DIRS}
 )
+
+
+# 目标连接库
 target_link_libraries(dccwidgets PRIVATE
     ${DtkWidget_LIBRARIES}
     ${Qt5Widgets_LIBRARIES}
 )
-# 导入目标头文件
-#target_include_directories(dccwidgets PUBLIC
-#    ${CMAKE_SOURCE_DIR}/include
-#    ${DtkWidget_INCLUDE_DIRS}
-#    ${Qt5Gui_PRIVATE_INCLUDE_DIRS}
-#)
-
-
-# 目标连接库
-#target_link_libraries(dccwidgets PRIVATE
-#    ${DtkWidget_LIBRARIES}
-#    ${Qt5Widgets_LIBRARIES}
-#)
 
 # 添加可执行文件
 add_executable(${BIN_NAME} ${SRCS})
-
 # 导入目标目录
 target_include_directories(${BIN_NAME} PUBLIC
     ${CMAKE_SOURCE_DIR}/include
@@ -220,7 +222,12 @@ target_link_libraries(${BIN_NAME} PRIVATE
     ${DEEPIN_PW_CHECK}
     crypt
     ${LIBS}
+    PolkitQt5-1::Agent
 )
+
+# bin
+install(TARGETS ${BIN_NAME} DESTINATION bin)
+install(TARGETS dccwidgets LIBRARY DESTINATION lib)
 
 set(Qt_LIBS
 ${Qt_LIBS}

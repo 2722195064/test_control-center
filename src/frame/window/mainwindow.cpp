@@ -105,6 +105,8 @@ void MainWindow::pushWidget(ModuleInterface * const inter, QWidget * const w)
         qDebug() << Q_FUNC_INFO << " widget is nullptr";
         return;
     }
+
+    pushNormalWidget(inter, w);
 }
 
 void MainWindow::popWidget(ModuleInterface * const inter)
@@ -150,6 +152,9 @@ void MainWindow::initAllmodule(const QString &m)
 // 第一次点击顶部视图
 void MainWindow::onFirstItemClick(const QModelIndex &index)
 {
+    if (!m_contentStack.isEmpty())
+        return;
+
     ModuleInterface *inter = m_modules[index.row()].first;
 
     m_navView->setFocus();
@@ -171,8 +176,19 @@ void MainWindow::onFirstItemClick(const QModelIndex &index)
 void MainWindow::popAllWidgets(int place)
 {
     for (int pageCount = m_contentStack.count(); pageCount > place ; pageCount--) {
-//        popWidget();
+        popWidget();
     }
+}
+
+void MainWindow::popWidget()
+{
+    if (!m_contentStack.size()) return;
+
+    // 显示原则: 先删除 后push
+    QWidget *w = m_contentStack.pop().second;
+    m_rightContentLayout->removeWidget(w);
+    w->setParent(nullptr);
+    w->deleteLater();
 }
 
 // 开启顶部视图 显示listview  此处显示控制中心两个视图模式
@@ -234,4 +250,22 @@ void MainWindow::modulePreInitialize(const QString &m)
                  .arg(et.elapsed());
         // TODO: 设置模块是否可见 setModuleVisible
     }
+}
+
+void MainWindow::pushNormalWidget(ModuleInterface * const inter, QWidget * const w)
+{
+    // 1. 避免多次点击生成多个窗口
+    popAllWidgets(1);
+    w->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
+
+    m_contentStack.push( {inter, w} );
+    qDebug() << "m_contentStack 当前stack size " << m_contentStack.size();
+    m_rightContentLayout->addWidget(w);
+
+    // 设置二级三级菜单宽度
+    if (m_contentStack.size() == 2) {
+        m_contentStack.at(0).second->setMinimumWidth(230);
+        m_contentStack.at(1).second->setMinimumWidth(340);
+    }
+    resetNavList(m_contentStack.empty());
 }

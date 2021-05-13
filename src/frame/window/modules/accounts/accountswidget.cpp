@@ -3,6 +3,10 @@
 #include "widgets/multiselectlistview.h"
 
 #include <QHBoxLayout>
+#include <QPushButton>
+#include <QUrl>
+
+#include <modules/accounts/usermodel.h>
 
 DWIDGET_USE_NAMESPACE
 using namespace dcc::accounts;
@@ -34,6 +38,9 @@ AccountsWidget::AccountsWidget(QWidget *parent)
 
     setLayout(mainContentLayout);
 
+    connect(m_userlistView, &QListView::clicked, this, &AccountsWidget::onItemClicked);
+    connect(m_userlistView, &DListView::activated, m_userlistView, &QListView::clicked);
+    connect(m_createBtn, &QPushButton::clicked, this, &AccountsWidget::requestCreateAccount);
 }
 
 AccountsWidget::~AccountsWidget()
@@ -45,4 +52,143 @@ void AccountsWidget::setModel(UserModel *model)
 {
     m_userModel = model;
     m_createBtn->setVisible(m_userModel);
+
+
+    // 添加账户
+    for (auto user : model->userList()) {
+        addUser(user);
+    }
+}
+
+void AccountsWidget::showDefaultAccountInfo()
+{
+    if (m_userlistView->count() > 0) {
+        QModelIndex qindex = m_userItemModel->index(0, 0);
+        m_userlistView->setCurrentIndex(qindex);
+        Q_EMIT m_userlistView->clicked(qindex);
+    }
+}
+
+void AccountsWidget::connectUserWithItem(User *user)
+{
+    connect(user, &User::nameChanged, this, [ = ](const QString &) {
+        int tindex = m_userList.indexOf(user);
+        auto titem = m_userItemModel->item(tindex);
+        if (!titem) {
+            return;
+        }
+        titem->setText(user->displayName());
+    });
+    connect(user, &User::fullnameChanged, this, [ = ](const QString &) {
+        int tindex = m_userList.indexOf(user);
+        auto titem = m_userItemModel->item(tindex);
+        if (titem) {
+            titem->setText(user->displayName());
+        }
+    });
+    connect(user, &User::currentAvatarChanged, this, [ = ](const QString & avatar) {
+        qDebug() << "账户图片 changed path -> " << avatar;
+        int tindex = m_userList.indexOf(user);
+        auto titem = m_userItemModel->item(tindex);
+        if (!titem) {
+            return;
+        }
+        auto ratio = this->devicePixelRatioF();
+        auto path = avatar;
+        if (ratio > 4.0) {
+            path.replace("icons/", "icons/bigger/");
+        }
+
+        path = path.startsWith("file://") ? QUrl(path).toLocalFile() : path;
+        QPixmap pixmap = pixmapToRound(path);
+
+        titem->setIcon(QIcon(pixmap));
+    });
+}
+
+QPixmap AccountsWidget::pixmapToRound(const QPixmap &src)
+{
+    if (src.isNull()) {
+        return QPixmap();
+    }
+
+    auto pixmap = QPixmap(src);
+    QSize size = pixmap.size();
+    QPixmap mask(size);
+    mask.fill(Qt::transparent);
+
+    QPainter painter(&mask);
+    painter.setRenderHint(QPainter::Antialiasing);
+
+    QPainterPath path;
+    path.addEllipse(0, 0, size.width(), size.height());
+    painter.setClipPath(path);
+    painter.drawPixmap(0, 0, pixmap);
+
+    return mask;
+}
+
+// 处理解决
+void AccountsWidget::handleRequestBack(AccountsWidget::ActionOption option)
+{
+    switch (option) {
+    case AccountsWidget::ClickCancel: { //点击取消
+        QModelIndex qindex0 = m_userItemModel->index(m_saveClickedRow, 0);
+        m_userlistView->setFocus();
+        m_userlistView->setCurrentIndex(qindex0);
+        onItemClicked(qindex0);
+        }
+        break;
+    case AccountsWidget::CreateUserSuccess: { //创建账户成功
+        QModelIndex qindex1 = m_userItemModel->index(m_userItemModel->rowCount() - 1, 0);
+        m_userlistView->setFocus();
+        m_userlistView->setCurrentIndex(qindex1);
+        onItemClicked(qindex1);
+        }
+        break;
+    case AccountsWidget::ModifyPwdSuccess: { //修改密码成功
+        QModelIndex qindex2 = m_userItemModel->index(0, 0);
+        m_userlistView->setFocus();
+        m_userlistView->setCurrentIndex(qindex2);
+        onItemClicked(qindex2);
+        }
+        break;
+    }
+}
+
+void AccountsWidget::toRequestBack(bool toBack)
+{
+    if(toBack) {
+        QModelIndex qindex1 = m_userItemModel->index(m_userItemModel->rowCount() - 1, 0);
+        m_userlistView->setFocus();
+        m_userlistView->setCurrentIndex(qindex1);
+        onItemClicked(qindex1);
+    }
+}
+
+
+void AccountsWidget::addUser(User *user, bool t1)
+{
+    m_userList << user;
+    DStandardItem *item = new  DStandardItem;
+    item->setData(0);
+
+    // TODO: 需要区分用户版本
+    // TODO: 添加当前联机用户
+
+    m_userItemModel->appendRow(item);
+    connectUserWithItem(user);
+
+}
+
+void AccountsWidget::removeUser(User *user)
+{
+
+}
+
+void AccountsWidget::onItemClicked(const QModelIndex &index)
+{
+    qDebug() << "change User ! ";
+    Q_EMIT requestShowAccountsDetail(m_userList[index.row()]);
+    m_userlistView->resetStatus(index);
 }

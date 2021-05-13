@@ -2,9 +2,11 @@
 
 #include "interfaces/moduleinterface.h"
 
+#include <window/mainwindow.h>
+
 namespace dcc {
 namespace accounts {
-class user;
+class User;
 class UserModel;
 class AccountsWorker;
 class AccountsWidget;
@@ -29,11 +31,16 @@ public:
 private:
     ~AccountsModule();
 
+public Q_SLOTS:
+    void onShowAccountsDetailWidget(dcc::accounts::User *account);
+    void onShowCreateAccountPage();
+    void onSetMainWindowEnabled(const bool isEnabled);
 
 private:
     dcc::accounts::UserModel *m_userModel{nullptr};
     dcc::accounts::AccountsWorker *m_accountsWorker{nullptr};
     AccountsWidget *m_accountsWidget = nullptr;
+    MainWindow *m_pMainWindow = nullptr;
 
 };
 

@@ -42,14 +42,17 @@ public:
     void initAllmodule(const QString &m = "");
     void onFirstItemClick(const QModelIndex &index);
     void popAllWidgets(int place = 0);
+    void popWidget();
 
 private:
     void resetNavList(bool isIconMode);
     void modulePreInitialize(const QString &m = nullptr);
+    void pushNormalWidget(ModuleInterface *const inter, QWidget *const w);  //exchange third widget : push new widget
+
 
 private:
     QHBoxLayout *m_contentLayout; //内容布局
-    QHBoxLayout *m_rightContentLayout;
+    QHBoxLayout *m_rightContentLayout; // 二三级界面
     DListView *m_navView;  // 顶部页面
     DBackgroundGroup *m_rightView;  // 右侧视图
     QStandardItemModel *m_navModel; // 顶部视图模型

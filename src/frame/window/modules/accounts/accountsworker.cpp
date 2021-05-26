@@ -103,7 +103,17 @@ void AccountsWorker::addUser(const QString &userPath)
 
 void AccountsWorker::removeUser(const QString &userPath)
 {
+    for (AccountsUser *userInter : m_userInters.values()) {
+        if (userInter->path() == userPath) {
+            User *user = m_userInters.key(userInter);
+            user->deleteLater();
 
+            m_userInters.remove(user);
+            m_userModel->removeUser(userPath);
+
+            return;
+        }
+    }
 }
 
 void AccountsWorker::onUserListChanged(const QStringList &userList)
@@ -260,4 +270,16 @@ void AccountsWorker::getAllGroupsResult(QDBusPendingCallWatcher *watch)
         qDebug() << "getAllGroupsResult error." << watch->error();
     }
     watch->deleteLater();
+}
+
+// 删除用户
+void AccountsWorker::deleteAccount(User *user, const bool deleteHome)
+{
+    // 调用后端接口
+    QDBusPendingReply<> reply = m_accountsInter->DeleteUser(user->name(), deleteHome);
+    reply.waitForFinished();
+    // 删除后操作
+    Q_EMIT m_userModel->deleteUserSuccess();
+    removeUser(m_userInters.value(user)->path());
+    getAllGroups();
 }

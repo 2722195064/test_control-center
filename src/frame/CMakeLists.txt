@@ -138,11 +138,25 @@ set(ACCOUNTS_FILES
     window/modules/accounts/createaccountpage.cpp
     )
 
+# bluetooth 蓝牙
+set(BLUETOOTH_FILES
+    modules/bluetooth/bluetoothmodel.cpp
+    modules/bluetooth/bluetoothworker.cpp
+    modules/bluetooth/device.cpp
+    modules/bluetooth/adapter.cpp
+    window/modules/bluetooth/titleedit.cpp
+    window/modules/bluetooth/bluetoothwidget.cpp
+    window/modules/bluetooth/bluetoothmodule.cpp
+    window/modules/bluetooth/adapterwidget.cpp
+    window/modules/bluetooth/devicesettingsitem.cpp
+)
+
 set(SRCS
     ${FRAME_FILES}
     ${INTERFACES_FILES}
     ${WINDOW_FILES}
     ${ACCOUNTS_FILES}
+    ${BLUETOOTH_FILES}
     ${SYNC_FILES}
 )
 

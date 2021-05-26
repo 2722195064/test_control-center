@@ -1,10 +1,13 @@
 #include "mainwindow.h"
 #include "interfaces/frameproxyinterface.h"
 #include "modules/accounts/accountsmodule.h"
+#include "modules/bluetooth/bluetoothmodule.h"
 
 #include <QHBoxLayout>
 #include <DTitlebar>
 #include <QVariant>
+
+#include <widgets/multiselectlistview.h>
 
 using namespace DCC_NAMESPACE;
 DTK_USE_NAMESPACE
@@ -40,7 +43,7 @@ MainWindow::MainWindow(QWidget *parent)
     m_rightView->setItemSpacing(2);
     m_rightView->setContentsMargins(10, 10, 10, 10);
 
-    m_navView = new DListView(this);
+    m_navView = new dcc::widgets::MultiSelectListView(this);
     m_navView->setFrameShape(QFrame::Shape::NoFrame);
     m_navView->setEditTriggers(QListView::NoEditTriggers);
     m_navView->setResizeMode(QListView::Adjust);
@@ -114,6 +117,12 @@ void MainWindow::popWidget(ModuleInterface * const inter)
 
 }
 
+void MainWindow::setModuleVisible(ModuleInterface * const inter, const bool visible)
+{
+    qDebug() << inter->name() << " 页面隐藏 ";
+    // TODO: 蓝牙页面隐藏
+}
+
 // 入口
 void MainWindow::initAllmodule(const QString &m)
 {
@@ -123,9 +132,11 @@ void MainWindow::initAllmodule(const QString &m)
     m_existenceInit = true;
 
     using namespace accounts;
+    using namespace bluetooth;
     // 实例化显示module
     m_modules = {
         {new AccountsModule(this), "帐户"},
+        {new BluetoothModule(this), "蓝牙"},
 
     };
 //     TODO:通过Gsetting 设置module是否可见
@@ -133,7 +144,7 @@ void MainWindow::initAllmodule(const QString &m)
 //  cbegin   Container<T>::const_iterator
     for (auto it = m_modules.cbegin(); it != m_modules.cend(); ++it){
         DStandardItem *item = new DStandardItem;
-        item->setIcon(it->first->icon());
+//        item->setIcon(it->first->icon()); 
         item->setText(it->second);
         item->setAccessibleText(it->second);
 //        item->setData(NavItemMargin, Dtk::MarginsRole);
@@ -152,10 +163,10 @@ void MainWindow::initAllmodule(const QString &m)
 // 第一次点击顶部视图
 void MainWindow::onFirstItemClick(const QModelIndex &index)
 {
-    if (!m_contentStack.isEmpty())
+    ModuleInterface *inter = m_modules[index.row()].first;
+    if (!m_contentStack.isEmpty() && m_contentStack.last().first == inter)
         return;
 
-    ModuleInterface *inter = m_modules[index.row()].first;
 
     m_navView->setFocus();
     popAllWidgets();
@@ -168,9 +179,10 @@ void MainWindow::onFirstItemClick(const QModelIndex &index)
     setCurrModule(inter);
     inter->active(); // 显示加载各二级菜单
 
-    m_navView->clearSelection();
-    m_navView->setSelectionMode(DListView::SingleSelection);
-    m_navView->setCurrentIndex(index);
+    m_navView->resetStatus(index);
+//    m_navView->clearSelection();
+//    m_navView->setSelectionMode(DListView::SingleSelection);
+//    m_navView->setCurrentIndex(index);
 }
 
 void MainWindow::popAllWidgets(int place)
@@ -189,6 +201,9 @@ void MainWindow::popWidget()
     m_rightContentLayout->removeWidget(w);
     w->setParent(nullptr);
     w->deleteLater();
+
+    if (m_contentStack.isEmpty())
+        setCurrModule(nullptr);
 }
 
 // 开启顶部视图 显示listview  此处显示控制中心两个视图模式
@@ -257,8 +272,9 @@ void MainWindow::pushNormalWidget(ModuleInterface * const inter, QWidget * const
     // 1. 避免多次点击生成多个窗口
     popAllWidgets(1);
     w->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
+    qDebug() << " -------- 当前显示窗口 size: " << m_contentStack.size();
 
-    m_contentStack.push( {inter, w} );
+    m_contentStack.push( {inter, w } );
     qDebug() << "m_contentStack 当前stack size " << m_contentStack.size();
     m_rightContentLayout->addWidget(w);
 

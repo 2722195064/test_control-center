@@ -7,6 +7,8 @@ find_package(DtkCMake REQUIRED)
 
 add_compile_definitions(CVERSION="${CVERSION}")
 
+add_definitions(-DWINDOW_MODE)
+
 add_subdirectory("src/frame")
 
 #find(GLOB HEADERS "include/*")

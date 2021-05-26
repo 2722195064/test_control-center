@@ -29,6 +29,7 @@ Q_SIGNALS:
     void userAdded(User *user);
     void userRemoved(User *user);
     void allGroupsChange(const QStringList &groups);
+    void deleteUserSuccess();
 
 private:
     QMap<QString, User *> m_userList;

@@ -23,6 +23,7 @@ public:
     // 弹出下一页
     virtual void pushWidget(ModuleInterface *const inter, QWidget *const w) = 0;
     virtual void popWidget(ModuleInterface *const inter) = 0;
+    virtual void setModuleVisible(ModuleInterface *const inter, const bool visible) = 0;
 
 public:
     ModuleInterface *currModule() const { return m_currModule; }

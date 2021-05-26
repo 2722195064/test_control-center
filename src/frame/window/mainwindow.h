@@ -25,6 +25,11 @@ class QWidget;
 //class DListView;
 QT_END_NAMESPACE
 
+namespace dcc {
+namespace widgets {
+class MultiSelectListView;
+}
+}
 
 namespace DCC_NAMESPACE {
 class ModuleInterface;
@@ -37,12 +42,14 @@ public:
 
     void pushWidget(ModuleInterface *const inter, QWidget *const w) override;
     void popWidget(ModuleInterface *const inter) override;
+    void setModuleVisible(ModuleInterface *const inter, const bool visible) override;
 
 public:
     void initAllmodule(const QString &m = "");
     void onFirstItemClick(const QModelIndex &index);
     void popAllWidgets(int place = 0);
     void popWidget();
+
 
 private:
     void resetNavList(bool isIconMode);
@@ -53,7 +60,8 @@ private:
 private:
     QHBoxLayout *m_contentLayout; //内容布局
     QHBoxLayout *m_rightContentLayout; // 二三级界面
-    DListView *m_navView;  // 顶部页面
+//    DListView *m_navView;  // 顶部页面
+    dcc::widgets::MultiSelectListView *m_navView;
     DBackgroundGroup *m_rightView;  // 右侧视图
     QStandardItemModel *m_navModel; // 顶部视图模型
     DSearchEdit *m_searchWidget; // 搜索框

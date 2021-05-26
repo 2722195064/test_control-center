@@ -42,7 +42,9 @@ void AccountsModule::active()
     m_accountsWidget->setModel(m_userModel);
     connect(m_accountsWidget, &AccountsWidget::requestShowAccountsDetail, this, &AccountsModule::onShowAccountsDetailWidget);
     connect(m_accountsWidget, &AccountsWidget::requestCreateAccount, this, &AccountsModule::onShowCreateAccountPage);
-
+    connect(m_accountsWidget, &AccountsWidget::requestBack, this, [ = ] {
+        m_frameProxy->popWidget(this);
+    });
     m_frameProxy->pushWidget(this, m_accountsWidget);
     m_accountsWidget->setVisible(true);
     // 显示默认用户
@@ -58,6 +60,12 @@ void AccountsModule::onShowAccountsDetailWidget(dcc::accounts::User *account)
 {
     AccountsDetailWidget *w = new AccountsDetailWidget(account);
     w->setVisible(true);
+
+    connect(m_userModel, &UserModel::deleteUserSuccess, w, &AccountsDetailWidget::requestBack);
+    connect(w, &AccountsDetailWidget::requestDeleteAccount, m_accountsWorker, &AccountsWorker::deleteAccount);
+    connect(w, &AccountsDetailWidget::requestBack, this, [&]() {
+        m_accountsWidget->setShowFirstUserInfo(false);
+    });
 
     m_frameProxy->pushWidget(this, w);
 }

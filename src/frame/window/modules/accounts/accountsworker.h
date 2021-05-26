@@ -45,7 +45,7 @@ public Q_SLOTS:
     void createAccount(const User *user);
     void getAllGroups();
     void getAllGroupsResult(QDBusPendingCallWatcher *watch);
-
+    void deleteAccount(User *user, const bool deleteHome);
 
 private:
     Accounts *m_accountsInter;

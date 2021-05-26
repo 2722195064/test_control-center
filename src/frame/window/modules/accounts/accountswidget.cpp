@@ -58,6 +58,8 @@ void AccountsWidget::setModel(UserModel *model)
     for (auto user : model->userList()) {
         addUser(user);
     }
+    connect(model, &UserModel::userRemoved, this, &AccountsWidget::removeUser);
+
 }
 
 void AccountsWidget::showDefaultAccountInfo()
@@ -67,6 +69,22 @@ void AccountsWidget::showDefaultAccountInfo()
         m_userlistView->setCurrentIndex(qindex);
         Q_EMIT m_userlistView->clicked(qindex);
     }
+}
+
+void AccountsWidget::showLastAccountInfo()
+{
+    if (m_userlistView->count() > 0) {
+        int lastindex = m_userItemModel->rowCount() - 1;
+        QModelIndex qindex = m_userItemModel->index(lastindex, 0);
+        m_userlistView->setFocus();
+        m_userlistView->setCurrentIndex(qindex);
+        Q_EMIT m_userlistView->clicked(qindex);
+    }
+}
+
+void AccountsWidget::setShowFirstUserInfo(bool show)
+{
+    m_isShowFirstUserInfo = show;
 }
 
 void AccountsWidget::connectUserWithItem(User *user)
@@ -183,7 +201,15 @@ void AccountsWidget::addUser(User *user, bool t1)
 
 void AccountsWidget::removeUser(User *user)
 {
+    m_userItemModel->removeRow(m_userList.indexOf(user)); // It will delete when remove
+    m_userList.removeOne(user);
 
+    if (m_userList.isEmpty()) {
+        Q_EMIT requestBack();
+        return;
+    }
+
+    m_isShowFirstUserInfo ? showDefaultAccountInfo() : showLastAccountInfo();
 }
 
 void AccountsWidget::onItemClicked(const QModelIndex &index)

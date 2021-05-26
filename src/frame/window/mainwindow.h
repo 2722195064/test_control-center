@@ -37,12 +37,14 @@ public:
 
     void pushWidget(ModuleInterface *const inter, QWidget *const w) override;
     void popWidget(ModuleInterface *const inter) override;
+    void setModuleVisible(ModuleInterface *const inter, const bool visible) override;
 
 public:
     void initAllmodule(const QString &m = "");
     void onFirstItemClick(const QModelIndex &index);
     void popAllWidgets(int place = 0);
     void popWidget();
+
 
 private:
     void resetNavList(bool isIconMode);

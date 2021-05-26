@@ -1,6 +1,7 @@
 #include "mainwindow.h"
 #include "interfaces/frameproxyinterface.h"
 #include "modules/accounts/accountsmodule.h"
+#include "modules/bluetooth/bluetoothmodule.h"
 
 #include <QHBoxLayout>
 #include <DTitlebar>
@@ -114,6 +115,12 @@ void MainWindow::popWidget(ModuleInterface * const inter)
 
 }
 
+void MainWindow::setModuleVisible(ModuleInterface * const inter, const bool visible)
+{
+    qDebug() << inter->name() << " 页面隐藏 ";
+    // TODO: 蓝牙页面隐藏
+}
+
 // 入口
 void MainWindow::initAllmodule(const QString &m)
 {
@@ -123,9 +130,11 @@ void MainWindow::initAllmodule(const QString &m)
     m_existenceInit = true;
 
     using namespace accounts;
+    using namespace bluetooth;
     // 实例化显示module
     m_modules = {
         {new AccountsModule(this), "帐户"},
+        {new BluetoothModule(this), "蓝牙"},
 
     };
 //     TODO:通过Gsetting 设置module是否可见
@@ -133,7 +142,7 @@ void MainWindow::initAllmodule(const QString &m)
 //  cbegin   Container<T>::const_iterator
     for (auto it = m_modules.cbegin(); it != m_modules.cend(); ++it){
         DStandardItem *item = new DStandardItem;
-        item->setIcon(it->first->icon());
+//        item->setIcon(it->first->icon()); 
         item->setText(it->second);
         item->setAccessibleText(it->second);
 //        item->setData(NavItemMargin, Dtk::MarginsRole);

@@ -37,7 +37,9 @@ public:
 
 Q_SIGNALS:
     void requestShowPwdSettings(dcc::accounts::User *user);
+    void requestDeleteAccount(dcc::accounts::User *user, const bool deleteHome);
     void requestSetAutoLogin(dcc::accounts::User *user, const bool autoLogin);
+    void requestBack();
 
 protected:
     void initUserInfo(QVBoxLayout *layout);

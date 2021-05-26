@@ -1,6 +1,7 @@
 #include "accountsdetailwidget.h"
 
 #include <QBoxLayout>
+#include <ddialog.h>
 #include <qscrollarea.h>
 
 #include <modules/accounts/avatarwidget.h>
@@ -134,5 +135,9 @@ void AccountsDetailWidget::initSetting(QVBoxLayout *layout)
         Q_EMIT requestShowPwdSettings(m_curUser);
     });
 
+    // 删除用户
+    connect(m_deleteAccount, &QPushButton::clicked, [ = ] {
+        Q_EMIT requestDeleteAccount(m_curUser, true);
+    });
 
 }

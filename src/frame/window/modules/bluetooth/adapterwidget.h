@@ -57,8 +57,18 @@ private:
 
 private Q_SLOTS:
     void addDevice(const dcc::bluetooth::Device *device);
+    void removeDevice(const QString &deviceId);
+
     void onPowerStatus(bool bPower, bool bDiscovering);
 
+Q_SIGNALS:
+    void requestSetToggleAdapter(const dcc::bluetooth::Adapter *adapter, const bool &toggled);
+    void requestRefresh(const dcc::bluetooth::Adapter *adapter);
+    void notifyRefreshDevice();
+    void requestShowDetail(const dcc::bluetooth::Adapter *adapter, const dcc::bluetooth::Device *device);
+
+    void requestConnectDevice(const dcc::bluetooth::Device *device, const dcc::bluetooth::Adapter *adapter);
+    void requestDisconnectDevice(const dcc::bluetooth::Device *device);
 
 private:
     TitleEdit *m_titleEdit;

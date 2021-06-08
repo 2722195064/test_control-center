@@ -33,9 +33,16 @@ void BluetoothModel::addAdapter(Adapter *adapter)
     adapter->deleteLater();
 }
 
-void BluetoothModel::removeAdapter(Adapter *adapter)
+const Adapter *BluetoothModel::removeAdapater(const QString &adapterId)
 {
-
+    const Adapter *adapter = nullptr;
+    adapter = adapterById(adapterId);
+    if (adapter) {
+        m_adapters.remove(adapterId);
+        Q_EMIT adapterRemove(adapter);
+        Q_EMIT adpaterListChanged();
+    }
+    return adapter;
 }
 
 const Adapter *BluetoothModel::adapterById(const QString &id)

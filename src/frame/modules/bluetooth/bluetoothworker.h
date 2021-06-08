@@ -34,6 +34,11 @@ public Q_SLOTS:
     void removeDevice(const QString &json);
     //设置适配器是否发现
     void setAdapterDiscovering(const QDBusObjectPath &path, bool enable);
+    void setAdapterPowered(const Adapter *adapter, const bool &powered);
+
+    void connectDevice(const Device *device, const Adapter *adapter);
+    void disconnectDevice(const Device *device);
+    void ignoreDevice(const Adapter *adapter, const Device *device);
 
     void refresh(bool beFirst = false);
 

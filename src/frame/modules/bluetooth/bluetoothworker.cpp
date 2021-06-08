@@ -31,37 +31,188 @@ BluetoothWorker::BluetoothWorker(BluetoothModel *model, bool sync)
 void BluetoothWorker::onAdapterPropertiesChanged(const QString &json)
 {
     qDebug() << "后端传递的适配器属性发生改变";
+    const QJsonDocument doc = QJsonDocument::fromJson(json.toUtf8());
+    const QJsonObject obj = doc.object();
+    const QString id = obj["Path"].toString();
+
+    Adapter *adapter = const_cast<Adapter*>(m_model->adapterById(id));
+    if (adapter)
+        inflateAdapter(adapter, obj);
 }
 
 void BluetoothWorker::onDevicePropertiesChanged(const QString &json)
 {
     qDebug() << "后端传递的设备属性发生改变";
+    const QJsonDocument doc = QJsonDocument::fromJson(json.toUtf8());
+    const QJsonObject obj = doc.object();
+    const QString id = obj["Path"].toString();
+    const QString name = obj["Name"].toString();
+    for (const Adapter *adapter : m_model->adapters()) {
+        Adapter *adatetPointer = const_cast<Adapter *>(adapter);
+        Device *device = const_cast<Device *>(adatetPointer->deviceById(id));
+        if (device) {
+            // 重新刷新 所有设备数据
+            if (device->name() == name) {
+                inflateDevice(device, obj);
+            } else {
+                if (!adatetPointer)
+                    return;
+                adatetPointer->removeDevice(device->id());
+                inflateDevice(device, obj);
+                adatetPointer->addDevice(device);
+            }
+        }
+    }
 }
 
 void BluetoothWorker::addAdapter(const QString &json)
 {
     qDebug() << "addAdapter";
+    QJsonDocument doc = QJsonDocument::fromJson(json.toUtf8());
+    QJsonObject obj = doc.object();
+
+    Adapter *adapter = new Adapter();
+    inflateAdapter(adapter,obj);
+    m_model->addAdapter(adapter);
 }
 
 void BluetoothWorker::removeAdapter(const QString &json)
 {
     qDebug() << "removeAdapter";
+    QJsonDocument doc = QJsonDocument::fromJson(json.toUtf8());
+    QJsonObject obj = doc.object();
+    const QString id = obj["Path"].toString();
+
+    const Adapter *result = m_model->removeAdapater(id);
+    Adapter *adapter = const_cast<Adapter*>(result);
+    if (adapter) {
+        adapter->deleteLater();
+        adapter = nullptr;
+    }
 }
 
 void BluetoothWorker::addDevice(const QString &json)
 {
-    qDebug() << "addDevice";
+    qDebug() << "add new Device";
+    QJsonDocument doc = QJsonDocument::fromJson(json.toUtf8());
+    QJsonObject obj = doc.object();
+    const QString adapterId = obj["AdapterPath"].toString();
+    const QString id = obj["Path"].toString();
+
+    const Adapter *result = m_model->adapterById(adapterId);
+    Adapter *adapter = const_cast<Adapter *>(result);
+    if (adapter) {
+        const Device *deviceResult = adapter->deviceById(id);
+        Device *device = const_cast<Device*>(deviceResult);
+        if (!device)
+            device = new Device(adapter);
+        inflateDevice(device, obj);
+        adapter->addDevice(device);
+    }
 }
 
 void BluetoothWorker::removeDevice(const QString &json)
 {
     qDebug() << "removeDevice";
+    QJsonDocument doc = QJsonDocument::fromJson(json.toUtf8());
+    QJsonObject obj = doc.object();
+    const QString adapterId = obj["AdapterPath"].toString();
+    const QString id = obj["Path"].toString();
 
+    const Adapter *result = m_model->adapterById(adapterId);
+    Adapter *adapter = const_cast<Adapter*>(result);
+    if (adapter) {
+        adapter->removeDevice(id);
+    }
 }
 
 void BluetoothWorker::setAdapterDiscovering(const QDBusObjectPath &path, bool enable)
 {
     m_bluetoothInter->SetAdapterDiscovering(path, enable);
+}
+
+void BluetoothWorker::setAdapterPowered(const Adapter *adapter, const bool &powered)
+{
+    // 设置预设机制 500ms后状态强制恢复
+    QTimer *timer = new QTimer;
+//    timer->setSingleShot(true);
+//    timer->setInterval(500);
+//    connect(timer, &QTimer::timeout, [ = ](){
+//        adapter->recoveryStatus();
+//    });
+
+    QDBusObjectPath path(adapter->id());
+    if (!powered) {
+        qDebug() << " 处理关闭状态: " ;
+        QDBusPendingCall call = m_bluetoothInter->ClearUnpairedDevice();
+        QDBusPendingCallWatcher *watcher = new QDBusPendingCallWatcher(call, this);
+        connect(watcher, &QDBusPendingCallWatcher::finished, [ = ]{
+            if (!call.isError()) {
+                QDBusPendingCall adapterPoweredOffCall = m_bluetoothInter->SetAdapterPowered(path, false);
+                QDBusPendingCallWatcher *watchers = new QDBusPendingCallWatcher(adapterPoweredOffCall, this);
+                connect(watchers, &QDBusPendingCallWatcher::finished, [this, adapterPoweredOffCall, adapter, powered, timer]{
+                    if (adapterPoweredOffCall.isError()){
+                        qDebug() << adapterPoweredOffCall.error().message();
+                        adapter->poweredChanged(adapter->powered(), adapter->discovering());
+                    }
+
+                    connect(adapter, &Adapter::poweredChanged, [ = ](const bool &receivePowerd, const bool &discovering){
+                        qDebug() << "WORKER POWER TEST : " << receivePowerd << powered << adapter->powered();
+                        if(receivePowerd == powered)
+                            adapter->loadStatus(adapter->powered());
+                    });
+                    delete timer;
+                });
+            } else {
+                qDebug() << call.error().message();
+            }
+        });
+    } else {
+        qDebug() << "处理开启状态: ";
+        QDBusPendingCall adapterPoweredOnCall  = m_bluetoothInter->SetAdapterPowered(path, true);
+        QDBusPendingCallWatcher *watcher = new QDBusPendingCallWatcher(adapterPoweredOnCall, this);
+        connect(watcher, &QDBusPendingCallWatcher::finished, [this, adapterPoweredOnCall, adapter, powered, timer] {
+            if (adapterPoweredOnCall.isError()) {
+                qDebug() << adapterPoweredOnCall.error().message();
+                adapter->poweredChanged(adapter->powered(), adapter->discovering());
+                return;
+            }
+            connect(adapter, &Adapter::poweredChanged, [ = ](const bool &receivePowerd, const bool &) {
+                qDebug() << "WORKER POWER TEST : " << receivePowerd << powered << adapter->powered();
+                if(receivePowerd == powered)
+                    adapter->loadStatus(adapter->powered());
+            });
+            delete timer;
+        });
+    }
+}
+
+void BluetoothWorker::connectDevice(const Device *device, const Adapter *adapter)
+{
+    // 判断传入的设备是否存在
+    for (const Adapter *ada : m_model->adapters()) {
+        for (const Device *dev : ada->devices()) {
+            Device *tmp = const_cast<Device *>(dev);
+            if (tmp)
+                tmp->setConnecting(dev == device);
+        }
+    }
+
+    QDBusObjectPath path(device->id());
+    m_bluetoothInter->ConnectDevice(path, QDBusObjectPath(adapter->id()));
+    qDebug() << "DO => 连接完成 : " << device->name();
+}
+
+void BluetoothWorker::disconnectDevice(const Device *device)
+{
+    qDebug() << "TODO : disconnectDevice " << device->name();
+    m_bluetoothInter->DisconnectDevice(QDBusObjectPath(device->id()));
+}
+
+void BluetoothWorker::ignoreDevice(const Adapter *adapter, const Device *device)
+{
+    qDebug() << "TODO : ignoreDevice 忽略" << device->name();
+    m_bluetoothInter->RemoveDevice(QDBusObjectPath(adapter->id()), QDBusObjectPath(device->id()));
 }
 
 void BluetoothWorker::refresh(bool beFirst)
@@ -119,6 +270,7 @@ void BluetoothWorker::inflateAdapter(Adapter *adapter, const QJsonObject &adapte
     adapter->setDiscoverabled(discovered);
     adapter->setId(path);
     adapter->setName(alias);
+    qDebug() << " ==== 开始解析的数据: " << powered << discovering;
     adapter->setPowered(powered, discovering);
 
     Q_EMIT deviceEnableChanged();
@@ -173,7 +325,7 @@ void BluetoothWorker::inflateAdapter(Adapter *adapter, const QJsonObject &adapte
 // 填充蓝牙设备
 void BluetoothWorker::inflateDevice(Device *device, const QJsonObject &deviceObj)
 {
-    qDebug() << "蓝牙设备JSON: " << deviceObj;
+    qDebug() << "蓝牙设备JSON: " /*<< deviceObj*/;
     const QString id = deviceObj["Path"].toString();
     const QString addr = deviceObj["Address"].toString();
     const QString alias = deviceObj["Alias"].toString();

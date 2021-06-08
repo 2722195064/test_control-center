@@ -1,5 +1,6 @@
 #include "bluetoothmodule.h"
 #include "bluetoothwidget.h"
+#include "detailpage.h"
 
 #include "modules/bluetooth/bluetoothworker.h"
 
@@ -47,11 +48,34 @@ void BluetoothModule::active()
 //    m_bluetoothWidget->setAttribute(Qt::WA_StyledBackground,true);
 //    m_bluetoothWidget->setStyleSheet("background-color: rgb(5, 255, 5)");
 
+    connect(m_bluetoothWidget, &BluetoothWidget::requestSetToggleAdapter, m_bluetoothWork, &BluetoothWorker::setAdapterPowered);
+    connect(m_bluetoothWidget, &BluetoothWidget::requestConnectDevice, m_bluetoothWork, &BluetoothWorker::connectDevice);
+
+    connect(m_bluetoothWidget, &BluetoothWidget::showDeviceDetail, this, &BluetoothModule::showDeviceDetail);
+
     m_bluetoothWidget->setModel(m_bluetoothModel);
     m_frameProxy->pushWidget(this, m_bluetoothWidget);
 
-
     m_bluetoothWidget->setVisible(true);
+}
+
+// 展示设备详情页
+void BluetoothModule::showDeviceDetail(const Adapter *adapter, const Device *device)
+{
+     DCC_NAMESPACE::bluetooth::DetailPage *page = new DCC_NAMESPACE::bluetooth::DetailPage(adapter, device);
+
+     connect(page, &DetailPage::requestIgnoreDevice, m_bluetoothWork, &BluetoothWorker::ignoreDevice);
+     connect(page, &DetailPage::requestDisconnectDevice, m_bluetoothWork, &BluetoothWorker::disconnectDevice);
+     connect(page, &DetailPage::requestConnectDevice, m_bluetoothWork, &BluetoothWorker::connectDevice);
+
+     m_frameProxy->pushWidget(this, page);
+     page->setVisible(true);
+}
+
+void BluetoothModule::popPage()
+{
+    m_bluetoothWidget->setFocus();
+    m_frameProxy->popWidget(this);
 }
 
 BluetoothModule::~BluetoothModule()

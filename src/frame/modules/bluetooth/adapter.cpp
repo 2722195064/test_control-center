@@ -64,7 +64,7 @@ void Adapter::addDevice(const Device *device)
         m_devices[device->id()] = device;
 
         if (!device->name().isEmpty() && device->paired())
-            qDebug() << "Adapter::addDevice 非空 配对设备:  " << device->name();
+            qDebug() << "Adapter::addDevice 正在 配对设备:  " << device->name();
         Q_EMIT deviceAdded(device);
     }
 }

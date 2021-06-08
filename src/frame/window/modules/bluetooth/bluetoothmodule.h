@@ -26,6 +26,10 @@ public:
     const QString name() const override;
     void active() override;
 
+public Q_SLOTS:
+    void showDeviceDetail(const dcc::bluetooth::Adapter *adapter, const dcc::bluetooth::Device *device);
+    void popPage();
+
 private:
     ~BluetoothModule();
 

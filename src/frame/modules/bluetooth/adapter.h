@@ -43,6 +43,8 @@ Q_SIGNALS:
     void poweredChanged(const bool &powered, const bool &discovering) const;
     void deviceRemoved(const QString &deviceId) const;
     void deviceAdded(const Device *device) const;
+    void loadStatus(bool isOpen) const;
+    void recoveryStatus() const;
 
 private:
     QString m_id;

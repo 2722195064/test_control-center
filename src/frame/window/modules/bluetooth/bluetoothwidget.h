@@ -30,6 +30,11 @@ public:
 
 Q_SIGNALS:
     void requestModuleVisible(const bool visible) const;
+    void requestSetToggleAdapter(const dcc::bluetooth::Adapter *adapter, const bool &toggled);
+
+    void requestConnectDevice(const dcc::bluetooth::Device *device, const dcc::bluetooth::Adapter *adapter);
+    void requestDisconnectDevice(const dcc::bluetooth::Device *device);
+    void showDeviceDetail(const dcc::bluetooth::Adapter *adapter, const dcc::bluetooth::Device *device);
 
 public Q_SLOTS:
     void addAdapter(const dcc::bluetooth::Adapter *adapter);
@@ -38,6 +43,7 @@ public Q_SLOTS:
 private:
     void setVisibleState();
     AdapterWidget *getAdapter(const dcc::bluetooth::Adapter *adapter);
+    void updateWidget();
 
 private:
     dcc::bluetooth::BluetoothModel *m_model;

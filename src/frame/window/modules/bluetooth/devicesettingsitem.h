@@ -34,15 +34,26 @@ public:
     virtual ~DeviceSettingsItem();
 
     DStandardItem *getStandardItem(DTK_WIDGET_NAMESPACE::DListView *parent = nullptr);
+    DStandardItem *createStandardItem(DTK_WIDGET_NAMESPACE::DListView *parent = nullptr);
+
     const dcc::bluetooth::Device *device() const;
+    void resetDeviceItem() { m_deviceItem = nullptr; }
+    void setLoading(const bool loading);
 
 private:
     void initItemActionList();
     void setDevice(const dcc::bluetooth::Device *device);
+    void loadingStart();
+    void loadingStop();
+
+Q_SIGNALS:
+    void requestShowDetail(const dcc::bluetooth::Device *device) const;
 
 private Q_SLOTS:
     void onDeviceStateChanged(const dcc::bluetooth::Device::State &state, bool paired);
     void onDevicePairedChanged(const bool &paired);
+    void onUpdateLoading();
+
 
 private:
     const dcc::bluetooth::Device *m_device { nullptr };

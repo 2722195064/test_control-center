@@ -19,7 +19,7 @@ public:
 public Q_SLOTS:
    // 新增蓝牙适配器
    void addAdapter(Adapter *adapter);
-   void removeAdapter(Adapter *adapter);
+   const Adapter *removeAdapater(const QString &adapterId);
    const Adapter *adapterById(const QString &id);
 
 Q_SIGNALS:

@@ -144,6 +144,7 @@ set(BLUETOOTH_FILES
     modules/bluetooth/bluetoothworker.cpp
     modules/bluetooth/device.cpp
     modules/bluetooth/adapter.cpp
+    window/modules/bluetooth/detailpage.cpp
     window/modules/bluetooth/titleedit.cpp
     window/modules/bluetooth/bluetoothwidget.cpp
     window/modules/bluetooth/bluetoothmodule.cpp

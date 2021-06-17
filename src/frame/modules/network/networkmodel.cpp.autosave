@@ -3,7 +3,7 @@
 using namespace dcc;
 using namespace dcc::network;
 
-NetworkModel::NetworkModel()
+NetworkModel::NetworkModel(QObject *parent)
 {
-
+    
 }

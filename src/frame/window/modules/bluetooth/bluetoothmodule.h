@@ -2,7 +2,7 @@
 
 #include <QObject>
 
-#include <interfaces/moduleinterface.h>
+#include "interfaces/moduleinterface.h"
 
 namespace dcc {
 namespace bluetooth {

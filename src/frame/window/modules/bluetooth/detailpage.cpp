@@ -72,6 +72,13 @@ DetailPage::DetailPage(const Adapter *adapter, const Device *device)
             QApplication::focusWidget()->clearFocus();
         }
     });
+    connect(backWidgetBtn, &DIconButton::clicked, this, &DetailPage::back);
+}
+
+void DetailPage::removeDevice(const QString &id)
+{
+    if(id == m_device->id())
+        Q_EMIT requestBack();
 }
 
 void DetailPage::onDeviceStatusChanged()

@@ -25,6 +25,9 @@ class DetailPage : public dcc::ContentWidget
 public:
     explicit DetailPage(const dcc::bluetooth::Adapter *adapter, const dcc::bluetooth::Device *device);
 
+public Q_SLOTS:
+    void removeDevice(const QString &id);
+
 Q_SIGNALS:
     void requestIgnoreDevice(const dcc::bluetooth::Adapter *adapter, const dcc::bluetooth::Device *device);
     void requestDisconnectDevice(const dcc::bluetooth::Device *device);

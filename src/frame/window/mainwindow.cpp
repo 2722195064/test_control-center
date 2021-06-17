@@ -114,6 +114,13 @@ void MainWindow::pushWidget(ModuleInterface * const inter, QWidget * const w)
 
 void MainWindow::popWidget(ModuleInterface * const inter)
 {
+   if (!m_contentStack.size())
+       return;
+
+   QWidget *w = m_contentStack.pop().second;
+   m_rightContentLayout->removeWidget(w);
+   w->setParent(nullptr);
+   w->deleteLater();
 
 }
 
@@ -133,6 +140,7 @@ void MainWindow::initAllmodule(const QString &m)
 
     using namespace accounts;
     using namespace bluetooth;
+
     // 实例化显示module
     m_modules = {
         {new AccountsModule(this), "帐户"},

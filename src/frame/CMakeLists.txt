@@ -152,12 +152,25 @@ set(BLUETOOTH_FILES
     window/modules/bluetooth/devicesettingsitem.cpp
 )
 
+# network 网络
+set(NETWORK_FILES
+    modules/network/networkworker.cpp
+    modules/network/networkmodel.cpp
+    modules/network/networkdevice.cpp
+    modules/network/wireddevice.cpp
+    modules/network/wirelessdevice.cpp
+
+    window/modules/network/networkmodule.cpp
+    window/modules/network/networkmodulewidget.cpp
+)
+
 set(SRCS
     ${FRAME_FILES}
     ${INTERFACES_FILES}
     ${WINDOW_FILES}
     ${ACCOUNTS_FILES}
     ${BLUETOOTH_FILES}
+    ${NETWORK_FILES}
     ${SYNC_FILES}
 )
 

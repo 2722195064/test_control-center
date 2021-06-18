@@ -2,6 +2,7 @@
 #include "interfaces/frameproxyinterface.h"
 #include "modules/accounts/accountsmodule.h"
 #include "modules/bluetooth/bluetoothmodule.h"
+#include "modules/network/networkmodule.h"
 
 #include <QHBoxLayout>
 #include <DTitlebar>
@@ -140,11 +141,13 @@ void MainWindow::initAllmodule(const QString &m)
 
     using namespace accounts;
     using namespace bluetooth;
+    using namespace network;
 
     // 实例化显示module
     m_modules = {
         {new AccountsModule(this), "帐户"},
         {new BluetoothModule(this), "蓝牙"},
+        {new NetworkModule(this), "网络"},
 
     };
 //     TODO:通过Gsetting 设置module是否可见

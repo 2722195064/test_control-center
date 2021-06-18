@@ -9,6 +9,7 @@ namespace dcc {
 namespace network {
 class NetworkModel;
 class NetworkWorker;
+class NetworkDevice;
 }
 }
 
@@ -30,14 +31,21 @@ private:
 public:
     void active() override;
 
+private Q_SLOTS:
+    void showDeviceDetailPage(dcc::network::NetworkDevice *dev, const QString &searchPath = "");
+    void onDeviceListChanged(const QList<dcc::network::NetworkDevice *> &devices);
+
+
 private:
     dcc::network::NetworkModel *m_networkModel;
     dcc::network::NetworkWorker *m_networkWorker;
     NetworkModuleWidget *m_networkWidget;
+    MainWindow *m_pMainWindow;
 
+    bool m_hasWired = false;
+    bool m_hasWireless = false;
 };
 }
 }
-
 
 #endif // NETWORKMODULE_H

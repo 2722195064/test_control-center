@@ -162,6 +162,7 @@ set(NETWORK_FILES
 
     window/modules/network/networkmodule.cpp
     window/modules/network/networkmodulewidget.cpp
+    window/modules/network/connectioneditpage.cpp
 )
 
 set(SRCS
